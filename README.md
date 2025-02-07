@@ -6,7 +6,7 @@ See a complete guide in the original website [wordle](https://www.nytimes.com/ga
 The word list is from [word list](https://github.com/meetDeveloper/freeDictionaryAPI/blob/master/meta/wordList/english.txt)
 and filtered for 5-letter words.
 
-![demo](demo.webm)
+![demo](demo.gif)
 
 ## Frameworks
 - [FTXUI](https://github.com/ArthurSonzogni/FTXUI) for terminal UI
