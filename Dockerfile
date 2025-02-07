@@ -19,10 +19,7 @@ RUN mkdir -p app/ && echo "" > app/dummy.cpp && \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_CXX_STANDARD=23 \
     -DCMAKE_EXE_LINKER_FLAGS="-static" && \
-    cmake --build build -t Catch2WithMain && \
-    cmake --build build -t screen && \
-    cmake --build build -t dom && \
-    cmake --build build -t component
+    cmake --build build -t Catch2WithMain screen dom component
 
 COPY include/ include/
 COPY src/ src/
@@ -34,8 +31,7 @@ COPY app/ app/
 COPY test/ test/
 
 RUN cmake -B build && \
-    cmake --build build -t main && \
-    cmake --build build -t test_all && \
+    cmake --build build -t main test_all && \
     ./build/test_all
 
 FROM alpine:3.20.3
