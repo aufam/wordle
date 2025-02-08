@@ -10,14 +10,9 @@ using namespace ftxui;
 using delameta::Result;
 using etl::Ok, etl::Err;
 
-struct WordBuilder {
-    std::string word;
-    Wordle::GuessResult scores;
-};
-
 extern auto create_keyboard(ScreenInteractive&, const Wordle::GuessSession&) -> Component;
-extern auto render_guess_word(const Wordle::GuessSession&, const WordBuilder&) -> Element;
-extern auto event_handler(Wordle::GuessSession&, Event, WordBuilder&, int& guess_count) -> std::pair<Result<void>, bool>;
+extern auto render_guess_word(const Wordle::GuessSession& s, const std::string& word_builder) -> Element;
+extern auto event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder) -> bool;
 extern void popup(std::string title, std::string message);
 
 OPTS_MAIN(
@@ -32,50 +27,38 @@ OPTS_MAIN(
     (Result<void>)
 ) {
     auto w = TRY(Wordle::Open(word_list, n_letters));
-    auto s = Wordle::GuessSession();
-
-    if (target_word.empty()) {
-        s = w.pick_random_and_start_guess_session(hard_mode);
-    } else {
-        s = TRY(w.start_guess_session(target_word, hard_mode));
-    }
-
-    auto word_builders = std::vector<WordBuilder>(6);
-    auto guess_count = 0;
+    auto s = target_word.empty() ?
+        w.pick_random_and_start_guess_session(hard_mode) :
+        TRY(w.start_guess_session(target_word, hard_mode));
 
     auto screen = ScreenInteractive::Fullscreen();
     auto keyboard = create_keyboard(screen, s);
+    auto word_builder = std::string();
 
     auto renderer = Renderer(keyboard, [&] {
         return window(
             text(std::string(" Wordle ") + (hard_mode ? " -- Hard Mode " : "-- Easy Mode ")) | bold | center,
             hbox({
                 filler(),
-                vbox({
-                    render_guess_word(s, word_builders[0]),
-                    render_guess_word(s, word_builders[1]),
-                    render_guess_word(s, word_builders[2]),
-                    render_guess_word(s, word_builders[3]),
-                    render_guess_word(s, word_builders[4]),
-                    render_guess_word(s, word_builders[5]),
-                }) | center,
+                render_guess_word(s, word_builder),
                 filler(),
                 keyboard->Render() | center,
                 filler(),
             })
-        );
+        ) | center;
     });
 
     renderer |= CatchEvent([&](Event e) {
-        auto &builder = word_builders[guess_count];
-        auto [res, handled] = event_handler(s, e, builder, guess_count);
+        if (not event_handler(e, s, word_builder))
+            return false;
 
-        if (res.is_err()) popup("Error", res.unwrap_err().what);
-
-        bool all_green = not builder.scores.empty() and
-            std::all_of(builder.scores.begin(), builder.scores.end(), [](auto score) {
+        const auto guess_count = s.past_results.size();
+        const auto *last_score = guess_count ? &s.past_results.back().second : nullptr;
+        const bool all_green = last_score and
+            std::all_of(last_score->begin(), last_score->end(), [](auto score) {
                 return score == Wordle::GuessScore::GREEN;
             });
+
         if (all_green) {
             const std::string congrats_messages[] = {
                 "Genius!",
@@ -95,7 +78,7 @@ OPTS_MAIN(
             screen.ExitLoopClosure()();
         }
 
-        return handled;
+        return true;
     });
 
     screen.Loop(renderer);

@@ -3,35 +3,29 @@
 
 using namespace Project;
 using namespace ftxui;
-using delameta::Result;
-using etl::Ok, etl::Err;
 
-struct WordBuilder {
-    std::string word;
-    Wordle::GuessResult scores;
-};
+extern void popup(std::string title, std::string message);
 
-auto event_handler(Wordle::GuessSession& s, Event e, WordBuilder& builder, int& guess_count) -> std::pair<Result<void>, bool> {
+auto event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder) -> bool {
     if (e.is_character() && std::isalpha(e.character()[0])) {
-        if (builder.word.size() < s.wordle->number_of_letters) {
-            builder.word += (char)std::tolower(e.character()[0]);
+        if (word_builder.size() < s.wordle->number_of_letters) {
+            word_builder += (char)std::tolower(e.character()[0]);
         }
-        return {Ok(), true};
+        return true;
     }
     else if (e == Event::Backspace or e.input() == "Delete") {
-        if (not builder.word.empty()) builder.word.pop_back();
-        return {Ok(), true};
+        if (not word_builder.empty()) word_builder.pop_back();
+        return true;
     }
     else if (e == Event::Return or e.input() == "Enter") {
-        if (builder.word.size() == s.wordle->number_of_letters) {
-            auto [scores, err] = s.guess(builder.word);
-            if (err) return {Err(std::move(*err)), true};
-
-            builder.scores = std::move(*scores);
-            ++guess_count;
+        if (word_builder.size() == s.wordle->number_of_letters) {
+            auto [_, err] = s.guess(word_builder);
+            if (err) popup("Error", err->what);
+            else word_builder = "";
         }
-        return {Ok(), true};
+        return true;
     }
 
-    return {Ok(), false};
+    return false;
 }
+
