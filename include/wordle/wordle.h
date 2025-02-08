@@ -44,7 +44,7 @@ namespace Project {
         etl::Ref<const Wordle> wordle;
         std::string target_word;
         bool hard_mode;
-        std::vector<std::string> guessed_words = {};
+        std::vector<std::pair<std::string, Wordle::GuessResult>> past_results = {};
         std::unordered_map<char, GuessScore> hints = {};
         std::unordered_map<int, char> green_hints = {};
 

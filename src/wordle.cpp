@@ -81,8 +81,7 @@ auto Wordle::GuessSession::guess(const std::string& guess_word) -> Result<Wordle
             return check_database(wordle->words_database, guess_word);
         });
 
-    if (not valid)
-        return Err(std::move(*err));
+    if (not valid) return Err(std::move(*err));
 
     // Step 0: Check for hard mode
     if (hard_mode) {
@@ -133,7 +132,7 @@ auto Wordle::GuessSession::guess(const std::string& guess_word) -> Result<Wordle
         }
     }
 
-    guessed_words.push_back(guess_word);
+    past_results.emplace_back(guess_word, guess_result);
     return Ok(std::move(guess_result));
 }
 
