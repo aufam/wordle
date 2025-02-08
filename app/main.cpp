@@ -12,7 +12,7 @@ using etl::Ok, etl::Err;
 
 extern auto create_keyboard(ScreenInteractive&, const Wordle::GuessSession&) -> Component;
 extern auto render_guess_word(const Wordle::GuessSession& s, const std::string& word_builder) -> Element;
-extern auto event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder) -> bool;
+extern bool event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder);
 extern void popup(std::string title, std::string message);
 
 OPTS_MAIN(
@@ -45,7 +45,7 @@ OPTS_MAIN(
                 keyboard->Render() | center,
                 filler(),
             })
-        ) | center;
+        );
     });
 
     renderer |= CatchEvent([&](Event e) {

@@ -6,7 +6,7 @@ using namespace ftxui;
 
 extern void popup(std::string title, std::string message);
 
-auto event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder) -> bool {
+bool event_handler(const Event& e, Wordle::GuessSession& s, std::string& word_builder) {
     if (e.is_character() && std::isalpha(e.character()[0])) {
         if (word_builder.size() < s.wordle->number_of_letters) {
             word_builder += (char)std::tolower(e.character()[0]);
